@@ -40,6 +40,7 @@ wikicode = mwparserfromhell.parse(text)
 archivelist = []
 count = 0
 MIN_TIME = datetime(1970, 1, 1)
+EP_REGEX = r'{{\s*(Editprotected|Editprotect|Sudo|EP|请求编辑|請求編輯|编辑请求|編輯請求|請求編輯受保護的頁面|请求编辑受保护的页面|Editsemiprotected|FPER|Edit[ _]+fully-protected|SPER|Edit[ _]+semi-protected|Edit[ _]+protected)\s*}}\n*'
 for section in wikicode.get_sections()[1:]:
     title = str(section.get(0).title)
     if args.debug:
@@ -66,15 +67,16 @@ for section in wikicode.get_sections()[1:]:
 
     archivestr = str(section).strip()
 
-    if re.search(r'{{\s*(Editprotected|EP|Editprotect|请求编辑|請求編輯|编辑请求|編輯請求|請求編輯受保護的頁面|請求編輯受保護的頁面|Editsemiprotected|FPER|Edit fully\-protected|SPER|Edit semi\-protected|Edit protected)\s*}}', str(section)):
+    if re.search(EP_REGEX, str(section), flags=re.I):
         if time.time() - lasttime.timestamp() < cfg['time_to_live_for_ep']:
             if args.debug:
                 print('ep found')
             continue
         archivestr = re.sub(
-            r'{{\s*(Editprotected|EP|Editprotect|请求编辑|請求編輯|编辑请求|編輯請求|請求編輯受保護的頁面|請求編輯受保護的頁面|Editsemiprotected|FPER|Edit fully\-protected|SPER|Edit semi\-protected|Edit protected)\s*}}\n*',
+            EP_REGEX,
             '{{Editprotected|no=1|sign=，機器人自動拒絕過舊申請。--~~~~}}\n\n',
-            archivestr
+            archivestr,
+            flags=re.I
         )
 
     archivestr = re.sub(
